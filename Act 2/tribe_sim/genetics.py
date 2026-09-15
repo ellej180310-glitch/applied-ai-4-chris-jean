@@ -69,30 +69,57 @@ class GeneticAlgorithm:
         return child
     
     def mutate(self, gatherer):
-        # STUDENT ASSIGNMENT 2: Implement a better mutation strategy
-        # Current version just randomly flips genes - very crude!
-        #
-        # Available information:
-        # - gatherer.genes: dict with 'speed', 'caution', 'search_pattern', 'efficiency', 'cooperation'
-        # - GENE_RANGES: dict with (min, max) values for each gene
-        # - MUTATION_RATE: probability of mutation (currently 0.1 = 10%)
-        # - MUTATION_STRENGTH: how much to change (currently 0.2 = ±20%)
-        #
-        # Strategy hints:
-        # 1. Current approach: percentage-based change (good for most genes)
-        # 2. Alternative: Gaussian/normal distribution around current value
-        # 3. Alternative: Fixed step size (add/subtract small amount)
-        # 4. Consider adaptive mutation (larger changes early, smaller later)
-        # 5. Maybe different strategies for different gene types?
-        # 6. Should all genes mutate equally? Maybe cooperation needs special handling?
-        #
-        # Remember: Mutation provides diversity but shouldn't destroy good solutions!
-        
-        for gene_name in gatherer.genes:
-            if random.random() < MUTATION_RATE:
-                # Minimal version: just flip a coin and randomize the gene completely
+        """Mutate genes while balancing exploration and fine-tuning."""
+
+        # Make larger changes early, then protect good solutions later.
+        progress = min(max((self.generation - 1) / 29.0, 0.0), 1.0)
+        mutation_rate = MUTATION_RATE * (1.0 - 0.50 * progress)
+        mutation_strength = MUTATION_STRENGTH * (1.0 - 0.75 * progress)
+
+        # Increase mutation if average fitness has stopped improving.
+        if len(self.fitness_history) >= 5:
+            recent = [
+                entry["avg_fitness"]
+                for entry in self.fitness_history[-5:]
+            ]
+
+            if max(recent) - min(recent) < 0.05:
+                mutation_rate = min(0.20, mutation_rate * 1.50)
+                mutation_strength = min(0.30, mutation_strength * 1.25)
+
+        # Each trait needs a different mutation size.
+        gene_scales = {
+            "speed": 0.55,
+            "caution": 0.80,
+            "search_pattern": 0.65,
+            "efficiency": 0.45,
+            "cooperation": 0.60
+        }
+
+        for gene_name, current_value in gatherer.genes.items():
+            if random.random() < mutation_rate:
                 min_val, max_val = GENE_RANGES[gene_name]
-                gatherer.genes[gene_name] = random.uniform(min_val, max_val)
+                gene_range = max_val - min_val
+                sigma = gene_range * mutation_strength * gene_scales[gene_name]
+
+                # Most mutations are small, but some can be larger.
+                new_value = current_value + random.gauss(0.0, sigma)
+
+                # Reflect values back inside their allowed range.
+                while new_value < min_val or new_value > max_val:
+                    if new_value < min_val:
+                        new_value = min_val + (min_val - new_value)
+
+                    if new_value > max_val:
+                        new_value = max_val - (new_value - max_val)
+
+                gatherer.genes[gene_name] = new_value
+
+        # A rare reset helps the population escape a local optimum.
+        if random.random() < mutation_rate * 0.10:
+            gene_name = random.choice(list(gatherer.genes.keys()))
+            min_val, max_val = GENE_RANGES[gene_name]
+            gatherer.genes[gene_name] = random.uniform(min_val, max_val)
     
     def create_next_generation(self, population):
         # Evaluate fitness
