@@ -27,33 +27,93 @@ class GeneticAlgorithm:
         return fitness_scores
     
     def select_survivors(self, fitness_scores):
-        # STUDENT ASSIGNMENT 3: Implement a better selection mechanism
-        # Current version just takes top 50% - very simple!
-        #
-        # Available information:
-        # - fitness_scores: list of (gatherer, fitness) tuples, sorted by fitness (best first)
-        # - SURVIVAL_RATE: currently 0.05 (top 5% survive)
-        # - len(fitness_scores): total population size
-        #
-        # Alternative selection strategies to consider:
-        # 1. Tournament selection: pick random groups, take best from each
-        # 2. Roulette wheel: probability proportional to fitness
-        # 3. Rank-based: select based on rank, not raw fitness values
-        # 4. Elite + random: guarantee best survive, then random selection
-        # 5. Fitness-proportionate with scaling (linear/exponential)
-        # 6. Hybrid approaches: combine multiple strategies
-        #
-        # Strategy hints:
-        # - Pure elitism (current) can cause premature convergence
-        # - Pure randomness loses good solutions
-        # - Tournament selection often works well (simple + effective)
-        # - Consider selection pressure: too high = less diversity, too low = slow evolution
-        #
-        # Remember: Selection determines which traits get passed to next generation!
-        
-        # Minimal version: just take top 50% of population
-        survival_count = max(1, len(fitness_scores) // 2)  # Top 50%
-        survivors = [gatherer for gatherer, fitness in fitness_scores[:survival_count]]
+        """Choose strong parents while keeping genetic variety."""
+
+        if not fitness_scores:
+            return []
+
+        population_size = len(fitness_scores)
+
+        # Keep 25% as parents, creating useful selection pressure.
+        survival_count = min(
+            population_size,
+            max(2, int(population_size * 0.25))
+        )
+
+        # Always save the best 5% so strong solutions are not lost.
+        elite_count = min(
+            survival_count,
+            max(1, int(population_size * 0.05))
+        )
+
+        survivors = [
+            gatherer
+            for gatherer, fitness in fitness_scores[:elite_count]
+        ]
+
+        available = list(fitness_scores[elite_count:])
+
+        min_fitness = fitness_scores[-1][1]
+        max_fitness = fitness_scores[0][1]
+        fitness_range = max(max_fitness - min_fitness, 0.000000001)
+
+        def diversity_score(candidate):
+            """Measure how different a candidate is from current survivors."""
+
+            if not survivors:
+                return 1.0
+
+            nearest_distance = 1.0
+
+            for survivor in survivors:
+                differences = []
+
+                for gene_name, value in candidate.genes.items():
+                    min_val, max_val = GENE_RANGES[gene_name]
+                    gene_range = max_val - min_val
+
+                    difference = abs(
+                        value - survivor.genes[gene_name]
+                    ) / gene_range
+
+                    differences.append(difference)
+
+                average_difference = sum(differences) / len(differences)
+                nearest_distance = min(
+                    nearest_distance,
+                    average_difference
+                )
+
+            return nearest_distance
+
+        # Reserve one place for a randomly selected wildcard.
+        wildcard_slots = 1 if survival_count - elite_count > 2 else 0
+        tournament_slots = survival_count - elite_count - wildcard_slots
+
+        for _ in range(tournament_slots):
+            tournament_size = min(5, len(available))
+            competitors = random.sample(available, tournament_size)
+
+            def competitive_score(entry):
+                gatherer, fitness = entry
+
+                normalized_fitness = (
+                    fitness - min_fitness
+                ) / fitness_range
+
+                return (
+                    0.85 * normalized_fitness
+                    + 0.15 * diversity_score(gatherer)
+                )
+
+            winner = max(competitors, key=competitive_score)
+            survivors.append(winner[0])
+            available.remove(winner)
+
+        # The wildcard preserves a strategy that could become useful later.
+        if wildcard_slots and available:
+            survivors.append(random.choice(available)[0])
+
         return survivors
     
     def crossover(self, parent1, parent2):
@@ -134,6 +194,12 @@ class GeneticAlgorithm:
                 'best_fitness': best_fitness,
                 'avg_fitness': avg_fitness
             })
+            
+            print(
+                f"Generation {self.generation}: "
+                f"average fitness = {avg_fitness:.2f}, "
+                f"best fitness = {best_fitness:.2f}"
+            )
             
             # Record trait averages
             all_gatherers = [gatherer for gatherer, _ in fitness_scores]
