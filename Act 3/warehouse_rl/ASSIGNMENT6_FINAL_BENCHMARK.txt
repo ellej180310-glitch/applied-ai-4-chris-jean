@@ -1,0 +1,139 @@
+﻿Running benchmark with 10 episodes per agent...
+
+Testing greedy_std...
+Testing greedy_std... [10% complete]
+Testing greedy_std... [20% complete]
+Testing greedy_std... [30% complete]
+Testing greedy_std... [40% complete]
+Testing greedy_std... [50% complete]
+Testing greedy_std... [60% complete]
+Testing greedy_std... [70% complete]
+Testing greedy_std... [80% complete]
+Testing greedy_std... [90% complete]
+Testing greedy_std... [100% complete]
+Testing greedy_std... Done!
+  Average Reward: 3445.18
+  Average Profit: $3445.18 ▒ $2188.72
+  Average Completion Rate: 29.7% ▒ 2.2%
+
+Testing random_std...
+Testing random_std... [10% complete]
+Testing random_std... [20% complete]
+Testing random_std... [30% complete]
+Testing random_std... [40% complete]
+Testing random_std... [50% complete]
+Testing random_std... [60% complete]
+Testing random_std... [70% complete]
+Testing random_std... [80% complete]
+Testing random_std... [90% complete]
+Testing random_std... [100% complete]
+Testing random_std... Done!
+  Average Reward: 18275.92
+  Average Profit: $18275.92 ▒ $2038.71
+  Average Completion Rate: 40.7% ▒ 2.1%
+
+Testing fixed_std...
+Testing fixed_std... [10% complete]
+Testing fixed_std... [20% complete]
+Testing fixed_std... [30% complete]
+Testing fixed_std... [40% complete]
+Testing fixed_std... [50% complete]
+Testing fixed_std... [60% complete]
+Testing fixed_std... [70% complete]
+Testing fixed_std... [80% complete]
+Testing fixed_std... [90% complete]
+Testing fixed_std... [100% complete]
+Testing fixed_std... Done!
+  Average Reward: 20827.93
+  Average Profit: $20827.93 ▒ $810.59
+  Average Completion Rate: 37.3% ▒ 2.0%
+
+Testing intelligent_hiring...
+Testing intelligent_hiring... [10% complete]
+Testing intelligent_hiring... [20% complete]
+Testing intelligent_hiring... [30% complete]
+Testing intelligent_hiring... [40% complete]
+Testing intelligent_hiring... [50% complete]
+Testing intelligent_hiring... [60% complete]
+Testing intelligent_hiring... [70% complete]
+Testing intelligent_hiring... [80% complete]
+Testing intelligent_hiring... [90% complete]
+Testing intelligent_hiring... [100% complete]
+Testing intelligent_hiring... Done!
+  Average Reward: 5209.07
+  Average Profit: $5209.07 ▒ $2653.31
+  Average Completion Rate: 31.3% ▒ 2.7%
+
+Testing intelligent_queue...
+Testing intelligent_queue... [10% complete]
+Testing intelligent_queue... [20% complete]
+Testing intelligent_queue... [30% complete]
+Testing intelligent_queue... [40% complete]
+Testing intelligent_queue... [50% complete]
+Testing intelligent_queue... [60% complete]
+Testing intelligent_queue... [70% complete]
+Testing intelligent_queue... [80% complete]
+Testing intelligent_queue... [90% complete]
+Testing intelligent_queue... [100% complete]
+Testing intelligent_queue... Done!
+  Average Reward: 18849.06
+  Average Profit: $18849.06 ▒ $1970.04
+  Average Completion Rate: 40.1% ▒ 2.3%
+
+Testing distance_based...
+Testing distance_based... [10% complete]
+Testing distance_based... [20% complete]
+Testing distance_based... [30% complete]
+Testing distance_based... [40% complete]
+Testing distance_based... [50% complete]
+Testing distance_based... [60% complete]
+Testing distance_based... [70% complete]
+Testing distance_based... [80% complete]
+Testing distance_based... [90% complete]
+Testing distance_based... [100% complete]
+Testing distance_based... Done!
+  Average Reward: 3666.06
+  Average Profit: $3666.06 ▒ $2800.42
+  Average Completion Rate: 29.8% ▒ 2.9%
+
+Testing aggressive_swap...
+Testing aggressive_swap... [10% complete]
+Testing aggressive_swap... [20% complete]
+Testing aggressive_swap... [30% complete]
+Testing aggressive_swap... [40% complete]
+Testing aggressive_swap... [50% complete]
+Testing aggressive_swap... [60% complete]
+Testing aggressive_swap... [70% complete]
+Testing aggressive_swap... [80% complete]
+Testing aggressive_swap... [90% complete]
+Testing aggressive_swap... [100% complete]
+Testing aggressive_swap... Done!
+  Average Reward: 20577.51
+  Average Profit: $20577.51 ▒ $750.40
+  Average Completion Rate: 38.6% ▒ 1.5%
+
+Testing skeleton_optimization...
+Testing skeleton_optimization... [10% complete]
+Testing skeleton_optimization... [20% complete]
+Testing skeleton_optimization... [30% complete]
+Testing skeleton_optimization... [40% complete]
+Testing skeleton_optimization... [50% complete]
+Testing skeleton_optimization... [60% complete]
+Testing skeleton_optimization... [70% complete]
+Testing skeleton_optimization... [80% complete]
+Testing skeleton_optimization... [90% complete]
+Testing skeleton_optimization... [100% complete]
+Testing skeleton_optimization... Done!
+  Average Reward: 27069.67
+  Average Profit: $27069.67 ▒ $4005.85
+  Average Completion Rate: 58.9% ▒ 5.9%
+
+--- Benchmark Results (ranked by profit) ---
+1. skeleton_optimization | Profit: $27069.67 ▒ $4005.85 | Completion:  58.9% ▒  5.9%
+2. fixed_std       | Profit: $20827.93 ▒ $810.59 | Completion:  37.3% ▒  2.0%
+3. aggressive_swap | Profit: $20577.51 ▒ $750.40 | Completion:  38.6% ▒  1.5%
+4. intelligent_queue | Profit: $18849.06 ▒ $1970.04 | Completion:  40.1% ▒  2.3%
+5. random_std      | Profit: $18275.92 ▒ $2038.71 | Completion:  40.7% ▒  2.1%
+6. intelligent_hiring | Profit: $ 5209.07 ▒ $2653.31 | Completion:  31.3% ▒  2.7%
+7. distance_based  | Profit: $ 3666.06 ▒ $2800.42 | Completion:  29.8% ▒  2.9%
+8. greedy_std      | Profit: $ 3445.18 ▒ $2188.72 | Completion:  29.7% ▒  2.2%

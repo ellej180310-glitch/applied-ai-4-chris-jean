@@ -15,6 +15,7 @@ Students should replace the naive methods with proper optimization algorithms.
 """
 
 import numpy as np
+from scipy.optimize import linear_sum_assignment
 from typing import Dict, Optional
 from .standardized_agents import BaselineAgent
 
@@ -43,19 +44,28 @@ class SkeletonOptimizationAgent(BaselineAgent):
         # Students can add algorithm parameters here
         # Example: Hungarian algorithm matrices, greedy search parameters, etc.
         self.staffing_parameters = {
-            'hire_threshold_ratio': 3.0,
-            'fire_threshold_ratio': 2.0,
-            'profit_threshold': 0
-        }
+             'hire_threshold_ratio': 3.0,
+             'fire_threshold_ratio': 1.5,
+             'profit_threshold': 1000.0,
+            'manager_profit_threshold': 2000.0,
+            'minimum_workers': 2,
+            'maximum_workers': 20,
+            'review_interval': 50
+            }
+
+        # Track economic performance and limit staffing changes
+        self.staffing_profit_history = []
+        self.last_staffing_review = -50
 
         # Students can implement adaptive parameters that change based on performance
         self.adaptive_optimization_enabled = False
 
     def reset(self):
-        """Reset agent state - students should expand this"""
+        """Reset agent state between simulation episodes."""
         self.action_history = []
         self.reward_history = []
-        # TODO: Reset any neural network states, replay buffers, etc.
+        self.staffing_profit_history = []
+        self.last_staffing_review = -50
 
     def get_action(self, observation: Dict) -> Dict:
         """
@@ -82,38 +92,141 @@ class SkeletonOptimizationAgent(BaselineAgent):
 
     def _get_naive_staffing_action(self, financial_state, employee_info) -> int:
         """
-        WEEK 2 STEP 1: Staffing decisions - students should improve this!
+        WEEK 2 STEP 1: Economic staffing optimization.
 
-        Current problems:
-        - Ignores queue length and workload
-        - Random decisions regardless of profit
-        - No consideration of employee efficiency
+        Hire only when demand and expected revenue justify the additional
+        wage cost. Fire only when capacity is clearly underused, while
+        preserving the manager and a minimum workforce.
         """
 
-        # TODO WEEK 2 STEP 1: Students should implement intelligent staffing logic
-        # Current approach: Make random decisions based on "vibes"
+        current_profit = float(financial_state[0])
+        revenue = float(financial_state[1])
+        costs = float(financial_state[2])
+        burn_rate = float(financial_state[3])
+        current_timestep = int(self.env.current_timestep)
 
-        current_profit = financial_state[0]
-        num_employees = len(self.env.employees)
+        employees = self.env.employees
+        workers = [
+            employee
+            for employee in employees
+            if not getattr(employee, "is_manager", False)
+        ]
+        managers = [
+            employee
+            for employee in employees
+            if getattr(employee, "is_manager", False)
+        ]
 
-        # Layout optimization requires one manager, but additional managers
-        # would create unnecessary salary costs.
-        has_manager = any(
-            getattr(employee, "is_manager", False)
-            for employee in self.env.employees
+        num_workers = len(workers)
+        queue_length = len(self.env.order_queue.orders)
+        has_manager = len(managers) > 0
+
+        # Record profit to measure whether performance is improving.
+        self.staffing_profit_history.append(current_profit)
+        if len(self.staffing_profit_history) > 200:
+            self.staffing_profit_history.pop(0)
+
+        recent_profit_change = 0.0
+        if len(self.staffing_profit_history) >= 51:
+            recent_profit_change = (
+                current_profit - self.staffing_profit_history[-51]
+            )
+
+        # Review staffing at fixed intervals instead of every timestep.
+        review_interval = self.staffing_parameters['review_interval']
+        if current_timestep - self.last_staffing_review < review_interval:
+            return 0
+
+        self.last_staffing_review = current_timestep
+
+        # Allow time for useful demand and financial data to develop.
+        if current_timestep < 200:
+            return 0
+
+        queue_pressure = queue_length / max(1, num_workers)
+        profit_per_worker = current_profit / max(1, num_workers)
+        average_revenue_per_step = revenue / max(1, current_timestep)
+
+        hire_threshold = self.staffing_parameters[
+            'hire_threshold_ratio'
+        ]
+        fire_threshold = self.staffing_parameters[
+            'fire_threshold_ratio'
+        ]
+        profit_threshold = self.staffing_parameters[
+            'profit_threshold'
+        ]
+        manager_threshold = self.staffing_parameters[
+            'manager_profit_threshold'
+        ]
+        minimum_workers = self.staffing_parameters[
+            'minimum_workers'
+        ]
+        maximum_workers = self.staffing_parameters[
+            'maximum_workers'
+        ]
+
+        # A low-wage worker adds approximately $0.20 to the burn rate.
+        projected_worker_burn_rate = burn_rate + 0.20
+        worker_is_affordable = (
+            current_profit > profit_threshold
+            and revenue > costs
+            and profit_per_worker > 0
+            and average_revenue_per_step > projected_worker_burn_rate
+            and recent_profit_change >= 0
         )
 
-        if np.random.random() < 0.3:  # 30% chance to hire
-            if num_employees < 20:  # Don't go completely overboard
-                return 1  # Hire worker
-        elif np.random.random() < 0.1:  # 10% chance to fire
-            if num_employees > 1:  # Don't fire everyone
-                return 2  # Fire worker
-        elif np.random.random() < 0.2:
-            if not has_manager:
+        # One manager supports layout relocation. Additional managers
+        # would create unnecessary salary costs.
+        projected_manager_burn_rate = burn_rate + 1.00
+        manager_is_affordable = (
+            current_profit > manager_threshold
+            and average_revenue_per_step > projected_manager_burn_rate
+        )
+
+        if not has_manager and num_workers >= minimum_workers:
+            if manager_is_affordable:
                 return 3
 
-        return 0  # No action
+        # Hire when demand is high and the additional wage is affordable.
+        if (
+            queue_pressure > hire_threshold
+            and worker_is_affordable
+            and num_workers < maximum_workers
+        ):
+            return 1
+
+        # The environment fires the first idle employee. Only approve
+        # firing when that employee is a worker, preserving the manager.
+        idle_employees = [
+            employee
+            for employee in employees
+            if getattr(employee.state, "name", "") == "IDLE"
+        ]
+        safe_worker_to_fire = (
+            len(idle_employees) > 0
+            and not getattr(
+                idle_employees[0],
+                "is_manager",
+                False
+            )
+        )
+
+        severe_overstaffing = queue_pressure < 0.75
+        financial_pressure = (
+            current_profit < 0
+            or recent_profit_change < 0
+        )
+
+        if (
+            queue_pressure < fire_threshold
+            and num_workers > minimum_workers
+            and safe_worker_to_fire
+            and (financial_pressure or severe_overstaffing)
+        ):
+            return 2
+
+        return 0
 
     def _get_naive_layout_action(self, current_timestep) -> list:
         """
@@ -376,33 +489,185 @@ class SkeletonOptimizationAgent(BaselineAgent):
 
         return best_swap
 
-    def _get_naive_order_assignments(self, queue_info, employee_info) -> list:
+    def _get_naive_order_assignments(
+        self,
+        queue_info,
+        employee_info
+    ) -> list:
         """
-        WEEK 2 STEP 2: Order assignment - students should improve this!
+        WEEK 2 STEP 2: Multi-objective worker-to-order assignment.
 
-        Current problems:
-        - Ignores employee locations
-        - No consideration of order priority/value
-        - Random assignments regardless of efficiency
-        - Doesn't check if employees are actually available
+        Use the Hungarian algorithm to minimize total assignment cost
+        while considering distance, order value, waiting time, and
+        priority. Each idle worker receives at most one pending order.
         """
 
-        # TODO WEEK 2 STEP 2: Students should implement intelligent order assignment
-        # Current approach: Random assignments
+        assignments = [0] * 20
 
-        assignments = [0] * 20  # No assignments by default
+        idle_workers = self._get_idle_workers()
+        indexed_orders = [
+            (order_index, order)
+            for order_index, order in enumerate(
+                self.env.order_queue.orders[:20]
+            )
+            if order.status == "pending"
+        ]
 
-        # Count how many employees we have (very naive)
-        num_employees = int(np.sum(employee_info[:, 0] > 0))
+        if not idle_workers or not indexed_orders:
+            return assignments
 
-        # Randomly assign first few orders to first few employees
-        if num_employees > 0:
-            for i in range(min(3, num_employees)):  # Only assign 3 orders max
-                if np.random.random() < 0.6:  # 60% chance to assign
-                    assignments[i] = (i % num_employees) + 1  # Random employee
+        orders = [order for _, order in indexed_orders]
+        max_order_value = max(order.value for order in orders)
+
+        benefit_matrix = np.zeros(
+            (len(idle_workers), len(orders)),
+            dtype=float
+        )
+
+        for worker_row, (_, worker_position) in enumerate(
+            idle_workers
+        ):
+            for order_column, order in enumerate(orders):
+                distance = self._calculate_order_distance(
+                    worker_position,
+                    order
+                )
+                distance_score = 1.0 / (1.0 + distance)
+                value_score = order.value / max_order_value
+                urgency_score = self._calculate_order_urgency(order)
+
+                # Preserve the required 70/30 distance-value balance.
+                base_benefit = (
+                    0.70 * distance_score
+                    + 0.30 * value_score
+                )
+
+                # Urgency increases the importance of the base score
+                # without replacing distance and value objectives.
+                total_benefit = base_benefit * (
+                    1.0 + 0.25 * urgency_score
+                )
+
+                benefit_matrix[
+                    worker_row,
+                    order_column
+                ] = total_benefit
+
+        # linear_sum_assignment minimizes cost, so benefits are negated.
+        worker_rows, order_columns = linear_sum_assignment(
+            -benefit_matrix
+        )
+
+        for worker_row, order_column in zip(
+            worker_rows,
+            order_columns
+        ):
+            employee_index = idle_workers[worker_row][0]
+            queue_index = indexed_orders[order_column][0]
+
+            # The environment expects a one-based employee position.
+            assignments[queue_index] = employee_index + 1
 
         return assignments
 
+    def _get_idle_workers(self):
+        """
+        Return available non-manager workers and their positions.
+
+        Each result contains the employee's zero-based position in the
+        environment list and the worker's current warehouse position.
+        """
+
+        idle_workers = []
+
+        for employee_index, employee in enumerate(
+            self.env.employees
+        ):
+            is_idle = (
+                getattr(employee.state, "name", "") == "IDLE"
+            )
+            has_no_order = (
+                getattr(employee, "current_order_id", None) is None
+            )
+            is_manager = getattr(
+                employee,
+                "is_manager",
+                False
+            )
+
+            if is_idle and has_no_order and not is_manager:
+                idle_workers.append(
+                    (employee_index, employee.position)
+                )
+
+        return idle_workers
+
+    def _calculate_order_distance(self, worker_position, order):
+        """
+        Calculate the minimum Manhattan distance from a worker to any
+        product required by an order.
+        """
+
+        grid = self.env.warehouse_grid
+        minimum_distance = float("inf")
+
+        for item_type in order.items:
+            item_locations = grid.find_item_locations(item_type)
+
+            for item_position in item_locations:
+                distance = grid.manhattan_distance(
+                    worker_position,
+                    item_position
+                )
+                minimum_distance = min(
+                    minimum_distance,
+                    distance
+                )
+
+        if minimum_distance == float("inf"):
+            return grid.width + grid.height
+
+        return minimum_distance
+
+    def _calculate_order_urgency(self, order):
+        """
+        Calculate urgency from waiting time, priority, and any express
+        deadline. The returned score is between zero and one.
+        """
+
+        current_timestep = int(self.env.current_timestep)
+        waiting_time = max(
+            0,
+            current_timestep - order.arrival_time
+        )
+        waiting_score = min(waiting_time / 300.0, 1.0)
+
+        priority_scores = {
+            "normal": 0.0,
+            "priority": 0.5,
+            "express": 1.0
+        }
+        priority_score = priority_scores.get(
+            order.priority,
+            0.0
+        )
+
+        deadline_score = 0.0
+        if order.deadline is not None:
+            time_remaining = max(
+                0,
+                order.deadline - current_timestep
+            )
+            deadline_score = 1.0 - min(
+                time_remaining / 300.0,
+                1.0
+            )
+
+        return max(
+            waiting_score,
+            priority_score,
+            deadline_score
+        )
     def record_reward(self, reward: float):
         """
         WEEK 3 STEP 1: Reward tracking and learning - students should expand this

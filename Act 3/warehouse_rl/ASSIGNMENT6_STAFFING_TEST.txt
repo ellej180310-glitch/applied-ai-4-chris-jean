@@ -1,0 +1,46 @@
+﻿Running warehouse simulation with skeleton_optimization agent...
+
+--- Episode 1/3 ---
+Step 500: Profit=$1857.33, Queue=47, Employees=5
+Step 1000: Profit=$4698.35, Queue=86, Employees=14
+Step 1500: Profit=$11438.11, Queue=149, Employees=21
+Step 2000: Profit=$21615.76, Queue=185, Employees=21
+Episode 1 completed!
+  Total Reward: 21615.76
+  Final Profit: $21615.76
+  Completion Rate: 50.9%
+  Orders Completed: 199
+  Orders Cancelled: 7
+
+--- Episode 2/3 ---
+Step 500: Profit=$3106.18, Queue=36, Employees=6
+Step 1000: Profit=$7014.57, Queue=102, Employees=16
+Step 1500: Profit=$16422.97, Queue=179, Employees=21
+Step 2000: Profit=$25166.29, Queue=216, Employees=21
+Episode 2 completed!
+  Total Reward: 25166.29
+  Final Profit: $25166.29
+  Completion Rate: 46.8%
+  Orders Completed: 199
+  Orders Cancelled: 10
+
+--- Episode 3/3 ---
+Step 500: Profit=$3283.04, Queue=53, Employees=8
+Step 1000: Profit=$9344.12, Queue=107, Employees=18
+Step 1500: Profit=$18541.28, Queue=168, Employees=21
+Step 2000: Profit=$26681.11, Queue=197, Employees=21
+Episode 3 completed!
+  Total Reward: 26681.11
+  Final Profit: $26681.11
+  Completion Rate: 50.9%
+  Orders Completed: 209
+  Orders Cancelled: 5
+
+--- Overall Summary (3 episodes) ---
+Average Reward: 24487.72
+Average Profit: $24487.72
+
+Displaying analytics for skeleton_optimization agent...
+
+Analytics gallery displayed for skeleton_optimization
+Click on any thumbnail to view the full chart, or use navigation buttons.

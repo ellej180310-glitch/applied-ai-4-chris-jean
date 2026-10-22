@@ -1,0 +1,70 @@
+﻿Running warehouse simulation with skeleton_optimization agent...
+
+--- Episode 1/5 ---
+Step 500: Profit=$2895.63, Queue=54, Employees=9
+Step 1000: Profit=$8127.53, Queue=99, Employees=19
+Step 1500: Profit=$17851.87, Queue=171, Employees=21
+Step 2000: Profit=$26243.99, Queue=196, Employees=21
+Episode 1 completed!
+  Total Reward: 26243.99
+  Final Profit: $26243.99
+  Completion Rate: 52.2%
+  Orders Completed: 225
+  Orders Cancelled: 10
+
+--- Episode 2/5 ---
+Step 500: Profit=$3049.74, Queue=44, Employees=7
+Step 1000: Profit=$7407.71, Queue=90, Employees=15
+Step 1500: Profit=$15310.91, Queue=163, Employees=21
+Step 2000: Profit=$24391.29, Queue=182, Employees=21
+Episode 2 completed!
+  Total Reward: 24391.29
+  Final Profit: $24391.29
+  Completion Rate: 52.2%
+  Orders Completed: 204
+  Orders Cancelled: 5
+
+--- Episode 3/5 ---
+Step 500: Profit=$2873.60, Queue=35, Employees=7
+Step 1000: Profit=$7329.05, Queue=105, Employees=17
+Step 1500: Profit=$16398.41, Queue=172, Employees=21
+Step 2000: Profit=$24181.78, Queue=194, Employees=21
+Episode 3 completed!
+  Total Reward: 24181.78
+  Final Profit: $24181.78
+  Completion Rate: 51.6%
+  Orders Completed: 212
+  Orders Cancelled: 5
+
+--- Episode 4/5 ---
+Step 500: Profit=$3073.58, Queue=38, Employees=8
+Step 1000: Profit=$7805.28, Queue=110, Employees=18
+Step 1500: Profit=$17868.75, Queue=172, Employees=21
+Step 2000: Profit=$26251.34, Queue=219, Employees=21
+Episode 4 completed!
+  Total Reward: 26251.34
+  Final Profit: $26251.34
+  Completion Rate: 48.9%
+  Orders Completed: 213
+  Orders Cancelled: 4
+
+--- Episode 5/5 ---
+Step 500: Profit=$2352.63, Queue=42, Employees=8
+Step 1000: Profit=$7220.02, Queue=102, Employees=18
+Step 1500: Profit=$18308.85, Queue=173, Employees=21
+Step 2000: Profit=$26097.68, Queue=211, Employees=21
+Episode 5 completed!
+  Total Reward: 26097.68
+  Final Profit: $26097.68
+  Completion Rate: 49.5%
+  Orders Completed: 218
+  Orders Cancelled: 11
+
+--- Overall Summary (5 episodes) ---
+Average Reward: 25433.22
+Average Profit: $25433.22
+
+Displaying analytics for skeleton_optimization agent...
+
+Analytics gallery displayed for skeleton_optimization
+Click on any thumbnail to view the full chart, or use navigation buttons.
